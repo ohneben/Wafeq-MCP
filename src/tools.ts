@@ -1,5 +1,5 @@
 import { categorize, type CategoryInfo } from "./categorize.js";
-import { IDEMPOTENCY_HEADER, type JsonSchema, type Operation, type ParameterSpec } from "./openapi.js";
+import { compactEnumDescriptions, IDEMPOTENCY_HEADER, type JsonSchema, type Operation, type ParameterSpec } from "./openapi.js";
 import { OPERATION_NOTES } from "./overrides.js";
 
 export interface ToolAnnotations {
@@ -67,7 +67,9 @@ function paramToSchema(p: ParameterSpec): JsonSchema {
   if (p.argName && p.argName !== p.name) {
     base.description = [base.description, `Sent to Wafeq as "${p.name}".`].filter(Boolean).join(" ");
   }
-  return base;
+  // Compact last: the parameter-level description is merged in above, and it is the
+  // one carrying the enum's bullet list.
+  return compactEnumDescriptions(base);
 }
 
 /** The `file_*` arguments shared by both upload endpoints. */

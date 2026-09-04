@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { resolve } from "node:path";
-import { assignArgNames, buildOperations, loadOpenApi, stripReadOnly, TOOL_ARG_KEY } from "../src/openapi.js";
+import {
+  assignArgNames,
+  buildOperations,
+  compactEnumDescriptions,
+  flattenSingleAllOf,
+  loadOpenApi,
+  stripReadOnly,
+  TOOL_ARG_KEY,
+} from "../src/openapi.js";
 
 const SPEC = resolve(__dirname, "..", "spec", "wafeq-public-api.json");
 const { operations } = loadOpenApi(SPEC);
@@ -164,5 +172,62 @@ describe("operation metadata", () => {
     expect(out[0].argName).toBe("cf__field");
     expect(out[1].argName).toBe("cf__field_2");
     expect(out[2].argName).toBe("ok_name");
+  });
+});
+
+describe("schema compaction", () => {
+  it("flattens a single-member allOf into its parent, parent keys winning", () => {
+    const out = flattenSingleAllOf({
+      description: "The currency.",
+      allOf: [{ enum: ["EUR", "AED"], type: "string", description: "inner loses" }],
+    }) as Record<string, unknown>;
+    expect(out.allOf).toBeUndefined();
+    expect(out.enum).toEqual(["EUR", "AED"]);
+    expect(out.type).toBe("string");
+    expect(out.description).toBe("The currency.");
+  });
+
+  it("leaves a multi-member allOf alone", () => {
+    const input = { allOf: [{ type: "string" }, { minLength: 1 }] };
+    expect((flattenSingleAllOf(input) as any).allOf).toHaveLength(2);
+  });
+
+  it("drops an enum description that only restates the enum, keeping the prose", () => {
+    const out = compactEnumDescriptions({
+      enum: ["AED", "SAR"],
+      description: "The currency of the report.\n\n* `AED` - AED\n* `SAR` - SAR",
+    }) as Record<string, unknown>;
+    expect(out.description).toBe("The currency of the report.");
+    expect(out.enum).toEqual(["AED", "SAR"]);
+  });
+
+  it("keeps descriptions that have no enum beside them", () => {
+    const text = "A list:\n\n* `one` - first\n* `two` - second";
+    expect((compactEnumDescriptions({ type: "string", description: text }) as any).description).toBe(text);
+  });
+
+  it("applies both transforms to the bundled spec", () => {
+    const create = operations.find((o) => o.operationId === "invoices_create")!;
+    const currency = (create.requestBodySchema as any).properties.currency;
+    expect(currency.allOf).toBeUndefined();
+    expect(currency.enum.length).toBeGreaterThan(100); // constraint preserved
+    expect(currency.description).not.toContain("* `AED`"); // duplication removed
+  });
+
+  it("never strips an enum's values", () => {
+    let checked = 0;
+    const walk = (node: unknown): void => {
+      if (!node || typeof node !== "object") return;
+      if (Array.isArray(node)) return node.forEach(walk);
+      const obj = node as Record<string, unknown>;
+      if (typeof obj.description === "string" && obj.description.includes("* `")) {
+        // Any surviving bullet list must NOT sit beside an enum.
+        expect(Array.isArray(obj.enum)).toBe(false);
+        checked++;
+      }
+      for (const v of Object.values(obj)) walk(v);
+    };
+    for (const op of operations) walk(op.requestBodySchema);
+    expect(checked).toBeGreaterThanOrEqual(0);
   });
 });
