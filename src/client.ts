@@ -268,7 +268,14 @@ export async function callOperation(
   const periodError = checkPeriodAlignment(op.operationId, args);
   if (periodError) throw new Error(periodError);
 
-  const consumed = new Set<string>([IDEMPOTENCY_ARG, "file_base64", "file_path", "filename", "content_type"]);
+  // Reserve the names this layer consumes itself, so they are not also sent as
+  // query/header parameters. The upload names are reserved only on upload
+  // operations, so a future spec that adds a real `filename` query parameter
+  // elsewhere still works.
+  const consumed = new Set<string>([IDEMPOTENCY_ARG]);
+  if (op.multipart || op.rawBinaryUpload) {
+    for (const key of ["file_base64", "file_path", "filename", "content_type"]) consumed.add(key);
+  }
   const expandedPath = expandPath(op, args, consumed);
   const query = buildQueryString(op, args, consumed);
   const headerParams = collectHeaderParams(op, args, consumed);

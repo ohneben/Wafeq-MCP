@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { resolve } from "node:path";
 import { loadOpenApi } from "../src/openapi.js";
-import { availableGroups, filterToolsByGroup, operationsToTools } from "../src/tools.js";
+import { availableGroups, filterToolsByGroup, normalizeGroup, operationsToTools } from "../src/tools.js";
 
 const { operations } = loadOpenApi(resolve(__dirname, "..", "spec", "wafeq-public-api.json"));
 const tools = operationsToTools(operations);
@@ -152,5 +152,17 @@ describe("group filtering", () => {
     expect(groups).toContain("invoices");
     expect(groups).toContain("journal_line_items");
     expect(groups.length).toBe(32);
+  });
+});
+
+describe("group name normalisation", () => {
+  it("treats spaced, hyphenated and snake_case names as the same group", () => {
+    expect(normalizeGroup("Bank Accounts")).toBe("bank_accounts");
+    expect(normalizeGroup("bank-accounts")).toBe("bank_accounts");
+    expect(normalizeGroup("bank_accounts")).toBe("bank_accounts");
+  });
+
+  it("agrees with the names availableGroups reports", () => {
+    for (const g of availableGroups(tools)) expect(normalizeGroup(g)).toBe(g);
   });
 });

@@ -9,7 +9,13 @@ import { callOperation, callRaw } from "./client.js";
 import { loadConfig, type ServerConfig } from "./config.js";
 import { extraTools } from "./extraTools.js";
 import { loadOpenApi } from "./openapi.js";
-import { availableGroups, filterToolsByGroup, operationsToTools, type ToolDefinition } from "./tools.js";
+import {
+  availableGroups,
+  filterToolsByGroup,
+  normalizeGroup,
+  operationsToTools,
+  type ToolDefinition,
+} from "./tools.js";
 
 const SERVER_NAME = "wafeq-mcp";
 const SERVER_VERSION = "2.0.0";
@@ -254,7 +260,7 @@ async function main() {
   let tools = operationsToTools(operations);
   if (config.toolGroups.length > 0) {
     const groups = availableGroups(tools);
-    const unknown = config.toolGroups.filter((g) => !groups.includes(g.toLowerCase().replace(/[^a-z0-9]+/g, "_")));
+    const unknown = config.toolGroups.filter((g) => !groups.includes(normalizeGroup(g)));
     if (unknown.length > 0) {
       console.error(`⚠️  WAFEQ_TOOL_GROUPS contains unknown group(s): ${unknown.join(", ")}`);
       console.error(`    Available groups: ${groups.join(", ")}`);
