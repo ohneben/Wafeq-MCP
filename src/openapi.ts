@@ -1,0 +1,351 @@
+import { readFileSync } from "node:fs";
+import { parse as parseYaml } from "yaml";
+
+const HTTP_METHODS = ["get", "post", "put", "delete", "patch", "head", "options"] as const;
+export type HttpMethod = (typeof HTTP_METHODS)[number];
+
+/** The idempotency header Wafeq exposes on write endpoints. */
+export const IDEMPOTENCY_HEADER = "X-Wafeq-Idempotency-Key";
+
+export interface ParameterSpec {
+  name: string;
+  in: "path" | "query" | "header" | "cookie";
+  required: boolean;
+  description?: string;
+  schema?: JsonSchema;
+  explode?: boolean;
+  /**
+   * The key this parameter is exposed under in the tool's input schema.
+   * Anthropic's API only accepts property keys matching `^[a-zA-Z0-9_.-]{1,64}$`;
+   * one illegal key would make an MCP client reject the ENTIRE tool list, so every
+   * parameter gets a sanitized alias. Equals `name` when already legal.
+   */
+  argName?: string;
+}
+
+export interface Operation {
+  operationId: string;
+  method: HttpMethod;
+  path: string;
+  summary?: string;
+  description?: string;
+  tags: string[];
+  parameters: ParameterSpec[];
+  requestBodySchema?: JsonSchema;
+  requestBodyRequired: boolean;
+  /** The content type we will actually send. */
+  requestBodyContentType?: string;
+  /** Every content type the endpoint declares, in spec order. */
+  requestBodyContentTypes: string[];
+  /** True when the request body is `multipart/form-data` only (file upload). */
+  multipart: boolean;
+  /** True when the body is an opaque byte stream (`*&#47;*`), e.g. POST /files/raw/. */
+  rawBinaryUpload: boolean;
+  /** Non-JSON success response, e.g. `application/pdf` — must not be decoded as text. */
+  binaryResponseType?: string;
+  /** True when the endpoint declares the {@link IDEMPOTENCY_HEADER} header. */
+  supportsIdempotencyKey: boolean;
+}
+
+export type JsonSchema = Record<string, unknown> | null | undefined;
+
+interface OpenApiDoc {
+  paths?: Record<string, PathItem>;
+  components?: {
+    parameters?: Record<string, ParameterSpec>;
+    schemas?: Record<string, JsonSchema>;
+    requestBodies?: Record<string, RequestBodyObject>;
+    responses?: Record<string, unknown>;
+  };
+  info?: { title?: string; version?: string };
+  servers?: Array<{ url?: string }>;
+}
+
+interface PathItem {
+  parameters?: Array<ParameterSpec | RefObject>;
+  [method: string]: unknown;
+}
+
+interface RefObject {
+  $ref: string;
+}
+
+interface OperationObject {
+  operationId?: string;
+  summary?: string;
+  description?: string;
+  tags?: string[];
+  parameters?: Array<ParameterSpec | RefObject>;
+  requestBody?: RequestBodyObject | RefObject;
+  responses?: Record<string, ResponseObject | RefObject>;
+}
+
+interface RequestBodyObject {
+  required?: boolean;
+  description?: string;
+  content?: Record<string, { schema?: JsonSchema }>;
+}
+
+interface ResponseObject {
+  content?: Record<string, { schema?: JsonSchema }>;
+}
+
+function isRef(value: unknown): value is RefObject {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "$ref" in value &&
+    typeof (value as RefObject).$ref === "string"
+  );
+}
+
+function resolveRef<T>(doc: OpenApiDoc, ref: string): T | undefined {
+  if (!ref.startsWith("#/")) return undefined;
+  const segments = ref.slice(2).split("/").map((s) => s.replace(/~1/g, "/").replace(/~0/g, "~"));
+  let cursor: unknown = doc;
+  for (const seg of segments) {
+    if (cursor && typeof cursor === "object" && seg in (cursor as Record<string, unknown>)) {
+      cursor = (cursor as Record<string, unknown>)[seg];
+    } else {
+      return undefined;
+    }
+  }
+  return cursor as T;
+}
+
+/**
+ * Inline every `$ref`, replacing a reference already being expanded on the current
+ * branch with a stub. Wafeq's schemas are self-referential in places (a contact
+ * embeds a contact), so without the `seen` guard this recurses forever.
+ */
+function dereferenceSchema(doc: OpenApiDoc, schema: JsonSchema, seen: Set<string> = new Set()): JsonSchema {
+  if (!schema || typeof schema !== "object") return schema;
+  if (isRef(schema)) {
+    const ref = (schema as unknown as RefObject).$ref;
+    if (seen.has(ref)) {
+      return { type: "object", description: `Recursive reference to ${ref}; pass a nested object of the same shape.` };
+    }
+    const resolved = resolveRef<JsonSchema>(doc, ref);
+    if (!resolved) return { description: `Unresolved $ref: ${ref}` };
+    return dereferenceSchema(doc, resolved, new Set([...seen, ref]));
+  }
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(schema)) {
+    if (Array.isArray(v)) {
+      out[k] = v.map((item) =>
+        item && typeof item === "object" ? dereferenceSchema(doc, item as JsonSchema, seen) : item,
+      );
+    } else if (v && typeof v === "object") {
+      out[k] = dereferenceSchema(doc, v as JsonSchema, seen);
+    } else {
+      out[k] = v;
+    }
+  }
+  return out;
+}
+
+/**
+ * Remove `readOnly: true` properties from a REQUEST schema and drop them from
+ * `required`.
+ *
+ * Wafeq's spec is generated by drf-spectacular, which reuses one serializer schema
+ * for both request and response. 64 of its 158 object schemas therefore list
+ * server-assigned fields (`id`, `created_ts`, `balance`, `amount`, `tax_amount`, …)
+ * as *required* — `Invoice` demands seven of them. Handing that to a model as the
+ * input schema makes every create and update tool unusable, because the model
+ * either invents values for fields the server assigns or refuses for lack of them.
+ * OpenAPI is explicit that readOnly properties "MUST NOT be sent as part of the
+ * request", so stripping them here is spec-correct, not a workaround.
+ */
+export function stripReadOnly(schema: JsonSchema): JsonSchema {
+  if (!schema || typeof schema !== "object") return schema;
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(schema)) {
+    if (k === "properties" && v && typeof v === "object" && !Array.isArray(v)) {
+      const props: Record<string, unknown> = {};
+      for (const [pk, pv] of Object.entries(v as Record<string, unknown>)) {
+        if (pv && typeof pv === "object" && (pv as Record<string, unknown>).readOnly === true) continue;
+        props[pk] = stripReadOnly(pv as JsonSchema);
+      }
+      out[k] = props;
+    } else if (Array.isArray(v)) {
+      out[k] = v.map((item) => (item && typeof item === "object" ? stripReadOnly(item as JsonSchema) : item));
+    } else if (v && typeof v === "object") {
+      out[k] = stripReadOnly(v as JsonSchema);
+    } else {
+      out[k] = v;
+    }
+  }
+  // Now that read-only properties are gone, prune them from `required` too.
+  const props = out.properties as Record<string, unknown> | undefined;
+  if (Array.isArray(out.required) && props) {
+    const kept = (out.required as unknown[]).filter((r) => typeof r === "string" && r in props);
+    if (kept.length > 0) out.required = kept;
+    else delete out.required;
+  }
+  return out;
+}
+
+function resolveParameter(doc: OpenApiDoc, p: ParameterSpec | RefObject): ParameterSpec | undefined {
+  if (isRef(p)) {
+    const resolved = resolveRef<ParameterSpec>(doc, p.$ref);
+    return resolved ? { ...resolved, required: resolved.required ?? false } : undefined;
+  }
+  return { ...p, required: p.required ?? p.in === "path" };
+}
+
+function resolveRequestBody(doc: OpenApiDoc, body: RequestBodyObject | RefObject): RequestBodyObject | undefined {
+  if (isRef(body)) return resolveRef<RequestBodyObject>(doc, body.$ref);
+  return body;
+}
+
+/**
+ * Headers the transport owns. `Authorization` is injected server-side from the
+ * environment and must never become a tool argument; `Content-Type` and `Accept`
+ * are derived from the operation. `X-Wafeq-Idempotency-Key` and
+ * `Content-Disposition` are deliberately NOT skipped — both are caller-supplied.
+ */
+const HEADERS_TO_SKIP = new Set(["authorization", "content-type", "accept"]);
+
+/** Anthropic's constraint on tool input-schema property keys. */
+export const TOOL_ARG_KEY = /^[a-zA-Z0-9_.-]{1,64}$/;
+
+const sanitizeArgKey = (name: string): string =>
+  name.replace(/[^a-zA-Z0-9_.-]+/g, "_").replace(/^[_.]+|[_.]+$/g, "").slice(0, 64) || "param";
+
+/**
+ * Give every parameter a schema-legal `argName`, unique within the operation.
+ * Names already matching {@link TOOL_ARG_KEY} pass through unchanged; the rest are
+ * sanitized so a single illegal key can't make an MCP client reject the whole list.
+ */
+export function assignArgNames(params: ParameterSpec[]): ParameterSpec[] {
+  const used = new Set<string>();
+  return params.map((p) => {
+    const base = TOOL_ARG_KEY.test(p.name) ? p.name : sanitizeArgKey(p.name);
+    let argName = base;
+    let i = 2;
+    while (used.has(argName)) argName = `${base.slice(0, 60)}_${i++}`;
+    used.add(argName);
+    return { ...p, argName };
+  });
+}
+
+/** Pick the body content type we will send, preferring JSON when the endpoint offers it. */
+function pickContentType(available: string[]): string | undefined {
+  if (available.length === 0) return undefined;
+  const json = available.find((ct) => ct.includes("application/json"));
+  if (json) return json;
+  const multipart = available.find((ct) => ct.includes("multipart/form-data"));
+  if (multipart) return multipart;
+  return available[0];
+}
+
+/** First non-JSON success response content type, if the endpoint returns bytes. */
+function detectBinaryResponse(doc: OpenApiDoc, op: OperationObject): string | undefined {
+  for (const [code, resRaw] of Object.entries(op.responses ?? {})) {
+    if (!/^2\d\d$/.test(code)) continue;
+    const res = isRef(resRaw) ? resolveRef<ResponseObject>(doc, resRaw.$ref) : (resRaw as ResponseObject);
+    for (const ct of Object.keys(res?.content ?? {})) {
+      if (!ct.includes("application/json") && ct !== "*/*") return ct;
+    }
+  }
+  return undefined;
+}
+
+export function parseSpec(raw: string, path: string): OpenApiDoc {
+  // Wafeq ships JSON; YAML is accepted so a differently-formatted spec still drops in.
+  if (/\.ya?ml$/i.test(path)) return parseYaml(raw) as OpenApiDoc;
+  try {
+    return JSON.parse(raw) as OpenApiDoc;
+  } catch {
+    return parseYaml(raw) as OpenApiDoc;
+  }
+}
+
+export function loadOpenApi(specPath: string): { operations: Operation[]; doc: OpenApiDoc } {
+  return buildOperations(parseSpec(readFileSync(specPath, "utf8"), specPath));
+}
+
+export function buildOperations(doc: OpenApiDoc): { operations: Operation[]; doc: OpenApiDoc } {
+  const operations: Operation[] = [];
+  if (!doc.paths) return { operations, doc };
+
+  for (const [path, pathItem] of Object.entries(doc.paths)) {
+    if (!pathItem) continue;
+    const pathLevelParams: ParameterSpec[] = (pathItem.parameters ?? [])
+      .map((p) => resolveParameter(doc, p))
+      .filter((p): p is ParameterSpec => Boolean(p));
+
+    for (const method of HTTP_METHODS) {
+      const op = (pathItem as Record<string, unknown>)[method] as OperationObject | undefined;
+      if (!op || typeof op !== "object") continue;
+
+      const opParams: ParameterSpec[] = (op.parameters ?? [])
+        .map((p) => resolveParameter(doc, p))
+        .filter((p): p is ParameterSpec => Boolean(p));
+
+      // Merge path-level params with operation-level params; operation-level wins by (name + in).
+      const merged = new Map<string, ParameterSpec>();
+      for (const p of pathLevelParams) merged.set(`${p.in}:${p.name}`, p);
+      for (const p of opParams) merged.set(`${p.in}:${p.name}`, p);
+
+      const allParams = [...merged.values()].filter(
+        (p) => !(p.in === "header" && HEADERS_TO_SKIP.has(p.name.toLowerCase())),
+      );
+
+      const supportsIdempotencyKey = allParams.some(
+        (p) => p.in === "header" && p.name.toLowerCase() === IDEMPOTENCY_HEADER.toLowerCase(),
+      );
+
+      let requestBodySchema: JsonSchema | undefined;
+      let requestBodyRequired = false;
+      let requestBodyContentType: string | undefined;
+      let requestBodyContentTypes: string[] = [];
+      if (op.requestBody) {
+        const rb = resolveRequestBody(doc, op.requestBody);
+        if (rb?.content) {
+          requestBodyContentTypes = Object.keys(rb.content);
+          requestBodyContentType = pickContentType(requestBodyContentTypes);
+          const entry = requestBodyContentType ? rb.content[requestBodyContentType] : undefined;
+          if (entry?.schema) {
+            requestBodySchema = stripReadOnly(dereferenceSchema(doc, entry.schema));
+          }
+          requestBodyRequired = rb.required ?? false;
+        }
+      }
+
+      const multipart =
+        requestBodyContentTypes.length > 0 &&
+        requestBodyContentTypes.every((ct) => ct.includes("multipart/form-data"));
+      const rawBinaryUpload = requestBodyContentTypes.length === 1 && requestBodyContentTypes[0] === "*/*";
+
+      const operationId =
+        op.operationId ?? `${method}-${path.replace(/[^a-zA-Z0-9]+/g, "-").replace(/^-|-$/g, "")}`;
+
+      operations.push({
+        operationId,
+        method,
+        path,
+        summary: op.summary,
+        description: op.description,
+        tags: op.tags ?? [],
+        parameters: assignArgNames(
+          allParams.map((p) => ({
+            ...p,
+            schema: p.schema ? dereferenceSchema(doc, p.schema) : undefined,
+          })),
+        ),
+        requestBodySchema,
+        requestBodyRequired,
+        requestBodyContentType,
+        requestBodyContentTypes,
+        multipart,
+        rawBinaryUpload,
+        binaryResponseType: detectBinaryResponse(doc, op),
+        supportsIdempotencyKey,
+      });
+    }
+  }
+
+  return { operations, doc };
+}

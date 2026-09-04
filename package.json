@@ -1,0 +1,57 @@
+{
+  "name": "wafeq-mcp",
+  "version": "2.0.0",
+  "description": "Model Context Protocol server for the Wafeq accounting API. Generates all 251 endpoints as safety-categorized MCP tools (read-only / write / irreversible / destructive) from the OpenAPI spec at build time.",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "wafeq",
+    "accounting",
+    "invoicing",
+    "e-invoicing",
+    "zatca",
+    "bookkeeping",
+    "api"
+  ],
+  "license": "MIT",
+  "author": "ohneben",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ohneben/Wafeq-MCP.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ohneben/Wafeq-MCP/issues"
+  },
+  "homepage": "https://github.com/ohneben/Wafeq-MCP#readme",
+  "type": "module",
+  "bin": {
+    "wafeq-mcp": "dist/index.js"
+  },
+  "main": "dist/index.js",
+  "files": [
+    "dist",
+    "spec"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "start:stdio": "MCP_TRANSPORT=stdio node dist/index.js",
+    "start:http": "MCP_TRANSPORT=http node dist/index.js",
+    "dev": "tsc --watch",
+    "list-tools": "node dist/scripts/list-tools.js",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "yaml": "^2.6.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2",
+    "vitest": "^4.1.10"
+  }
+}
