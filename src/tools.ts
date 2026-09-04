@@ -206,6 +206,13 @@ export function operationsToTools(operations: Operation[]): ToolDefinition[] {
 }
 
 /**
+ * Canonical form of a group name: `Bank Accounts`, `bank-accounts` and
+ * `bank_accounts` all name the same group. Exported so the startup warning and the
+ * filter itself cannot disagree about what counts as a valid name.
+ */
+export const normalizeGroup = (name: string): string => snakeCase(name);
+
+/**
  * Restrict the catalogue to the given tag/resource groups.
  *
  * 251 tools is a lot for one server and some hosts slow down or start mis-selecting
@@ -216,7 +223,7 @@ export function operationsToTools(operations: Operation[]): ToolDefinition[] {
  */
 export function filterToolsByGroup(tools: ToolDefinition[], groups: string[]): ToolDefinition[] {
   if (groups.length === 0) return tools;
-  const wanted = new Set(groups.map((g) => snakeCase(g)));
+  const wanted = new Set(groups.map(normalizeGroup));
   return tools.filter((t) => {
     if (!t.operation) return true;
     const tag = snakeCase(t.operation.tags[0] ?? "");

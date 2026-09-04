@@ -300,7 +300,7 @@ Changes that come with the rebuild rather than from a specific bug:
 | **Tenant check** | None | `GET /organization/` at startup, published on `/health` |
 | **Passthrough safety** | Could not set headers | Full headers; `Authorization` non-overridable; refuses other hosts |
 | **Schema size** | n/a (18 tools) | Single-member `allOf` flattened and duplicated enum prose dropped — ~29% off the `tools/list` payload, no allowed values lost |
-| **Tests** | None | 104 tests across 7 files, CI on Node 20 and 22 |
+| **Tests** | None | 106 tests across 7 files, CI on Node 20 and 22 |
 
 ### On the escape hatch
 
