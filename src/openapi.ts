@@ -186,6 +186,74 @@ export function stripReadOnly(schema: JsonSchema): JsonSchema {
   return out;
 }
 
+/**
+ * Collapse a single-member `allOf` into its parent.
+ *
+ * drf-spectacular wraps every enum reference as
+ * `{ allOf: [ { $ref: CurrencyEnum } ], description: "…" }`, which after
+ * dereferencing leaves the `enum` one level below the `description` that duplicates
+ * it. Flattening puts them back on the same node — which both lets
+ * {@link compactEnumDescriptions} see the pair and gives the model a plainer schema.
+ * Keys already on the parent win, so nothing is overwritten.
+ */
+export function flattenSingleAllOf(schema: JsonSchema): JsonSchema {
+  if (!schema || typeof schema !== "object") return schema;
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(schema)) {
+    if (Array.isArray(v)) {
+      out[k] = v.map((item) => (item && typeof item === "object" ? flattenSingleAllOf(item as JsonSchema) : item));
+    } else if (v && typeof v === "object") {
+      out[k] = flattenSingleAllOf(v as JsonSchema);
+    } else {
+      out[k] = v;
+    }
+  }
+  const allOf = out.allOf;
+  if (Array.isArray(allOf) && allOf.length === 1 && allOf[0] && typeof allOf[0] === "object" && !Array.isArray(allOf[0])) {
+    const inner = allOf[0] as Record<string, unknown>;
+    delete out.allOf;
+    for (const [k, v] of Object.entries(inner)) {
+      if (!(k in out)) out[k] = v;
+    }
+  }
+  return out;
+}
+
+/**
+ * Drop the bullet list an enum's description repeats from its own `enum` array.
+ *
+ * drf-spectacular renders every choice into the description as well as into `enum`,
+ * so `CurrencyEnum` carries ~4 KB of "* `AED` - AED ⃱ * `SAR` - SAR ⃁ …" and it is
+ * inlined at every one of the 203 places a currency or status appears. The values
+ * survive in `enum`, which is what actually constrains the model, so only the prose
+ * before the list is kept. Descriptions without an accompanying `enum` are left
+ * alone — those carry real information.
+ */
+export function compactEnumDescriptions(schema: JsonSchema): JsonSchema {
+  if (!schema || typeof schema !== "object") return schema;
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(schema)) {
+    if (Array.isArray(v)) {
+      out[k] = v.map((item) => (item && typeof item === "object" ? compactEnumDescriptions(item as JsonSchema) : item));
+    } else if (v && typeof v === "object") {
+      out[k] = compactEnumDescriptions(v as JsonSchema);
+    } else {
+      out[k] = v;
+    }
+  }
+  if (Array.isArray(out.enum) && typeof out.description === "string") {
+    const idx = out.description.indexOf("* `");
+    // `idx === 0` means the description is nothing but the bullet list, so it goes
+    // entirely — the enum already carries the values.
+    if (idx >= 0) {
+      const kept = out.description.slice(0, idx).trim();
+      if (kept.length > 0) out.description = kept;
+      else delete out.description;
+    }
+  }
+  return out;
+}
+
 function resolveParameter(doc: OpenApiDoc, p: ParameterSpec | RefObject): ParameterSpec | undefined {
   if (isRef(p)) {
     const resolved = resolveRef<ParameterSpec>(doc, p.$ref);
@@ -308,7 +376,9 @@ export function buildOperations(doc: OpenApiDoc): { operations: Operation[]; doc
           requestBodyContentType = pickContentType(requestBodyContentTypes);
           const entry = requestBodyContentType ? rb.content[requestBodyContentType] : undefined;
           if (entry?.schema) {
-            requestBodySchema = stripReadOnly(dereferenceSchema(doc, entry.schema));
+            requestBodySchema = compactEnumDescriptions(
+              flattenSingleAllOf(stripReadOnly(dereferenceSchema(doc, entry.schema))),
+            );
           }
           requestBodyRequired = rb.required ?? false;
         }
@@ -332,7 +402,7 @@ export function buildOperations(doc: OpenApiDoc): { operations: Operation[]; doc
         parameters: assignArgNames(
           allParams.map((p) => ({
             ...p,
-            schema: p.schema ? dereferenceSchema(doc, p.schema) : undefined,
+            schema: p.schema ? flattenSingleAllOf(dereferenceSchema(doc, p.schema)) : undefined,
           })),
         ),
         requestBodySchema,

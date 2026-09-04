@@ -52,6 +52,7 @@ LLM** and **easy to run against real accounting data**:
 | Tax-authority filing flagged as irreversible, not "create" | ✅ | ❌ |
 | `readOnlyHint` / `destructiveHint` MCP annotations | ✅ | ➖ |
 | Read-only fields stripped from create/update bodies | ✅ | ❌ |
+| Duplicated enum prose compacted out of schemas | ✅ | ❌ |
 | Correct, per-report date parameters | ✅ | ✅ |
 | Whole-period range validated before sending | ✅ | ❌ |
 | Automatic `X-Wafeq-Idempotency-Key`, stable across retries | ✅ | ❌ |
@@ -194,8 +195,17 @@ working default.
 
 ### Too many tools?
 
-251 tools is a lot, and some hosts get slower or less accurate with that many. Narrow
-the catalogue without touching code:
+251 tools is a lot. The full catalogue is about **0.5 MB of JSON (~133k tokens)** on
+`tools/list`, and some hosts get slower or less accurate with that many. Two things
+help.
+
+**The schemas are already compacted.** Wafeq's spec renders every enum's values into
+its description *as well as* into `enum` — the currency list alone is ~4 KB, inlined
+at 203 places. The generator collapses those single-member `allOf` wrappers and drops
+the duplicated bullet lists, which takes ~29% off the payload without removing a
+single allowed value.
+
+**Narrow the catalogue** if you still want it smaller — no code changes needed:
 
 ```bash
 WAFEQ_TOOL_GROUPS=invoices,bills,contacts,payments,reports,accounts,items,tax-rates
