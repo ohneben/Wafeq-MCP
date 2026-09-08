@@ -1,6 +1,6 @@
 {
   "name": "wafeq-mcp",
-  "version": "2.0.0",
+  "version": "0.3.0",
   "description": "Model Context Protocol server for the Wafeq accounting API. Generates all 251 endpoints as safety-categorized MCP tools (read-only / write / irreversible / destructive) from the OpenAPI spec at build time.",
   "keywords": [
     "mcp",
