@@ -39,6 +39,14 @@ jobs:
       - name: List tools
         run: node dist/scripts/list-tools.js
 
+      # Catches anything the local test cannot: the registry validates server.json
+      # server-side, and a rejection would otherwise only surface during a release,
+      # once the image has already been pushed.
+      - name: Validate server.json against the MCP Registry
+        run: |
+          curl -sL "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" | tar xz mcp-publisher
+          ./mcp-publisher validate
+
       - name: Fail if a credential was committed
         run: |
           if git ls-files --error-unmatch .env >/dev/null 2>&1; then

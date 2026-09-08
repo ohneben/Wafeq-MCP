@@ -34,6 +34,13 @@ describe("release metadata", () => {
     expect(dockerfile).toContain(`LABEL io.modelcontextprotocol.server.name="${server.name}"`);
   });
 
+  it("keeps the description inside the registry's 100-character limit", () => {
+    // The MCP Registry rejects a longer description with an HTTP 422, and it does
+    // so at publish time — after the image is already pushed. This is the cheap
+    // local version of that check.
+    expect(server.description.length).toBeLessThanOrEqual(100);
+  });
+
   it("declares the transport switch the registry entry tells clients to set", () => {
     const names = server.packages[0].environmentVariables.map((v: { name: string }) => v.name);
     expect(names).toContain("MCP_TRANSPORT");

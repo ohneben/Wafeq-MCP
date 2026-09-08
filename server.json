@@ -2,7 +2,7 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.ohneben/wafeq-mcp",
   "title": "Wafeq",
-  "description": "Wafeq Public API: all 251 endpoints as safety-categorized MCP tools, plus a ledger helper and a passthrough.",
+  "description": "Wafeq accounting API: all 251 endpoints as safety-categorized MCP tools, over stdio or HTTP.",
   "version": "2.0.0",
   "websiteUrl": "https://github.com/ohneben/Wafeq-MCP#readme",
   "repository": {
@@ -24,7 +24,10 @@
           "description": "Server transport. Set to 'stdio' for local MCP clients; the image otherwise starts the Streamable HTTP transport.",
           "isRequired": true,
           "default": "stdio",
-          "choices": ["stdio", "http"]
+          "choices": [
+            "stdio",
+            "http"
+          ]
         },
         {
           "name": "WAFEQ_API_KEY",
