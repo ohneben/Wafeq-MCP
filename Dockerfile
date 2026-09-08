@@ -23,6 +23,10 @@ ENV NODE_ENV=production \
     HOST=0.0.0.0 \
     PORT=8765
 
+# Ownership proof for the MCP Registry: this must match the "name" field in
+# server.json exactly, otherwise the registry rejects the image.
+LABEL io.modelcontextprotocol.server.name="io.github.ohneben/wafeq-mcp"
+
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package.json ./package.json
