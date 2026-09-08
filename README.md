@@ -4,13 +4,12 @@
 
 ---
 
-#### License & checks
+#### License & Checks
 
 [![CI](https://github.com/ohneben/Wafeq-MCP/actions/workflows/ci.yml/badge.svg)](https://github.com/ohneben/Wafeq-MCP/actions/workflows/ci.yml)
-[![Publish image & MCP Registry entry](https://github.com/ohneben/Wafeq-MCP/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/ohneben/Wafeq-MCP/actions/workflows/docker-publish.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE.md)
 
-#### MCP registries
+#### MCP Registries
 
 [![MCP Registry](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fregistry.modelcontextprotocol.io%2Fv0.1%2Fservers%2Fio.github.ohneben%252Fwafeq-mcp%2Fversions%2Flatest&query=%24.server.version&prefix=v&label=MCP%20Registry&color=blue&logo=modelcontextprotocol&logoColor=white)](https://registry.modelcontextprotocol.io/v0.1/servers/io.github.ohneben%2Fwafeq-mcp/versions/latest)
 [![Listed on mcpservers.org](https://mcpservers.org/badge.svg)](https://mcpservers.org/servers/ohneben/wafeq-mcp)
@@ -302,6 +301,322 @@ Print the live catalogue any time, without credentials:
 npm run list-tools
 ```
 
+<details>
+<summary><strong>🟢 READ-ONLY (85)</strong></summary>
+
+| Tool | Endpoint |
+|---|---|
+| `wafeq_account_ledger` | _hand-written_ |
+| `wafeq_accounts_list` | `GET /accounts/` |
+| `wafeq_accounts_retrieve` | `GET /accounts/{id}/` |
+| `wafeq_amortizations_list` | `GET /amortizations/` |
+| `wafeq_amortizations_retrieve` | `GET /amortizations/{id}/` |
+| `wafeq_bank_accounts_ledger_transactions_list` | `GET /bank-accounts/{bank_account_id}/ledger-transactions/` |
+| `wafeq_bank_accounts_ledger_transactions_retrieve` | `GET /bank-accounts/{bank_account_id}/ledger-transactions/{id}/` |
+| `wafeq_bank_accounts_list` | `GET /bank-accounts/` |
+| `wafeq_bank_accounts_retrieve` | `GET /bank-accounts/{id}/` |
+| `wafeq_bank_accounts_statement_transactions_list` | `GET /bank-accounts/{bank_account_id}/statement-transactions/` |
+| `wafeq_bank_accounts_statement_transactions_retrieve` | `GET /bank-accounts/{bank_account_id}/statement-transactions/{id}/` |
+| `wafeq_beneficiaries_list` | `GET /beneficiaries/` |
+| `wafeq_beneficiaries_retrieve` | `GET /beneficiaries/{id}/` |
+| `wafeq_bills_line_items_list` | `GET /bills/{bill_id}/line-items/` |
+| `wafeq_bills_line_items_retrieve` | `GET /bills/{bill_id}/line-items/{id}/` |
+| `wafeq_bills_list` | `GET /bills/` |
+| `wafeq_bills_retrieve` | `GET /bills/{id}/` |
+| `wafeq_branches_list` | `GET /branches/` |
+| `wafeq_branches_retrieve` | `GET /branches/{id}/` |
+| `wafeq_contacts_list` | `GET /contacts/` |
+| `wafeq_contacts_retrieve` | `GET /contacts/{id}/` |
+| `wafeq_cost_centers_list` | `GET /cost-centers/` |
+| `wafeq_cost_centers_retrieve` | `GET /cost-centers/{id}/` |
+| `wafeq_credit_notes_line_items_list` | `GET /credit-notes/{credit_note_id}/line-items/` |
+| `wafeq_credit_notes_line_items_retrieve` | `GET /credit-notes/{credit_note_id}/line-items/{id}/` |
+| `wafeq_credit_notes_list` | `GET /credit-notes/` |
+| `wafeq_credit_notes_retrieve` | `GET /credit-notes/{id}/` |
+| `wafeq_custom_fields_list` | `GET /custom-fields/` |
+| `wafeq_custom_fields_retrieve` | `GET /custom-fields/{id}/` |
+| `wafeq_debit_notes_line_items_list` | `GET /debit-notes/{debit_note_id}/line-items/` |
+| `wafeq_debit_notes_line_items_retrieve` | `GET /debit-notes/{debit_note_id}/line-items/{id}/` |
+| `wafeq_debit_notes_list` | `GET /debit-notes/` |
+| `wafeq_debit_notes_retrieve` | `GET /debit-notes/{id}/` |
+| `wafeq_employees_list` | `GET /employees/` |
+| `wafeq_employees_retrieve` | `GET /employees/{id}/` |
+| `wafeq_expenses_list` | `GET /expenses/` |
+| `wafeq_expenses_retrieve` | `GET /expenses/{id}/` |
+| `wafeq_files_list` | `GET /files/` |
+| `wafeq_files_retrieve` | `GET /files/{id}/` |
+| `wafeq_invoices_line_items_list` | `GET /invoices/{invoice_id}/line-items/` |
+| `wafeq_invoices_line_items_retrieve` | `GET /invoices/{invoice_id}/line-items/{id}/` |
+| `wafeq_invoices_list` | `GET /invoices/` |
+| `wafeq_invoices_retrieve` | `GET /invoices/{id}/` |
+| `wafeq_item_units_of_measure_list` | `GET /item-units-of-measure/` |
+| `wafeq_item_units_of_measure_retrieve` | `GET /item-units-of-measure/{id}/` |
+| `wafeq_items_list` | `GET /items/` |
+| `wafeq_items_retrieve` | `GET /items/{id}/` |
+| `wafeq_journal_line_items_list` | `GET /journal-line-items/` |
+| `wafeq_journal_line_items_retrieve` | `GET /journal-line-items/{id}/` |
+| `wafeq_manual_journals_list` | `GET /manual-journals/` |
+| `wafeq_manual_journals_retrieve` | `GET /manual-journals/{id}/` |
+| `wafeq_organization_retrieve` | `GET /organization/` |
+| `wafeq_payment_requests_list` | `GET /payment_requests/` |
+| `wafeq_payment_requests_retrieve` | `GET /payment_requests/{id}/` |
+| `wafeq_payments_list` | `GET /payments/` |
+| `wafeq_payments_retrieve` | `GET /payments/{id}/` |
+| `wafeq_payslips_list` | `GET /payslips/` |
+| `wafeq_payslips_pay_items_list` | `GET /payslips/{payslip_id}/pay-items/` |
+| `wafeq_payslips_pay_items_retrieve` | `GET /payslips/{payslip_id}/pay-items/{id}/` |
+| `wafeq_payslips_retrieve` | `GET /payslips/{id}/` |
+| `wafeq_projects_list` | `GET /projects/` |
+| `wafeq_projects_retrieve` | `GET /projects/{id}/` |
+| `wafeq_purchase_orders_line_items_list` | `GET /purchase-orders/{purchase_order_id}/line-items/` |
+| `wafeq_purchase_orders_line_items_retrieve` | `GET /purchase-orders/{purchase_order_id}/line-items/{id}/` |
+| `wafeq_purchase_orders_list` | `GET /purchase-orders/` |
+| `wafeq_purchase_orders_retrieve` | `GET /purchase-orders/{id}/` |
+| `wafeq_quotes_line_items_list` | `GET /quotes/{quote_id}/line-items/` |
+| `wafeq_quotes_line_items_retrieve` | `GET /quotes/{quote_id}/line-items/{id}/` |
+| `wafeq_quotes_list` | `GET /quotes/` |
+| `wafeq_quotes_retrieve` | `GET /quotes/{id}/` |
+| `wafeq_reports_balance_sheet_list` | `GET /reports/balance-sheet/` |
+| `wafeq_reports_cash_flow_list` | `GET /reports/cash-flow/` |
+| `wafeq_reports_profit_and_loss_list` | `GET /reports/profit-and-loss/` |
+| `wafeq_reports_trial_balance_list` | `GET /reports/trial-balance/` |
+| `wafeq_revenue_recognitions_list` | `GET /revenue-recognitions/` |
+| `wafeq_revenue_recognitions_retrieve` | `GET /revenue-recognitions/{id}/` |
+| `wafeq_simplified_invoices_line_items_list` | `GET /simplified-invoices/{invoice_id}/line-items/` |
+| `wafeq_simplified_invoices_line_items_retrieve` | `GET /simplified-invoices/{invoice_id}/line-items/{id}/` |
+| `wafeq_simplified_invoices_list` | `GET /simplified-invoices/` |
+| `wafeq_simplified_invoices_retrieve` | `GET /simplified-invoices/{id}/` |
+| `wafeq_tax_rates_list` | `GET /tax-rates/` |
+| `wafeq_units_of_measure_list` | `GET /units-of-measure/` |
+| `wafeq_units_of_measure_retrieve` | `GET /units-of-measure/{id}/` |
+| `wafeq_warehouses_list` | `GET /warehouses/` |
+| `wafeq_warehouses_retrieve` | `GET /warehouses/{id}/` |
+</details>
+
+<details>
+<summary><strong>🟢 READ-ONLY (PDF) (9)</strong></summary>
+
+| Tool | Endpoint |
+|---|---|
+| `wafeq_bills_download_retrieve` | `GET /bills/{id}/download/` |
+| `wafeq_credit_notes_download_retrieve` | `GET /credit-notes/{id}/download/` |
+| `wafeq_debit_notes_download_retrieve` | `GET /debit-notes/{id}/download/` |
+| `wafeq_invoices_download_retrieve` | `GET /invoices/{id}/download/` |
+| `wafeq_payments_download_retrieve` | `GET /payments/{id}/download/` |
+| `wafeq_payslips_download_retrieve` | `GET /payslips/{id}/download/` |
+| `wafeq_purchase_orders_download_retrieve` | `GET /purchase-orders/{id}/download/` |
+| `wafeq_quotes_download_retrieve` | `GET /quotes/{id}/download/` |
+| `wafeq_simplified_invoices_download_retrieve` | `GET /simplified-invoices/{id}/download/` |
+</details>
+
+<details>
+<summary><strong>🟢 READ-ONLY (PREVIEW) (4)</strong></summary>
+
+| Tool | Endpoint |
+|---|---|
+| `wafeq_amortizations_preview_create` | `POST /amortizations/preview/` |
+| `wafeq_amortizations_preview_end_early_create` | `POST /amortizations/{id}/preview-end-early/` |
+| `wafeq_revenue_recognitions_preview_create` | `POST /revenue-recognitions/preview/` |
+| `wafeq_revenue_recognitions_preview_end_early_create` | `POST /revenue-recognitions/{id}/preview-end-early/` |
+</details>
+
+<details>
+<summary><strong>🟡 WRITE · CREATES (39)</strong></summary>
+
+| Tool | Endpoint |
+|---|---|
+| `wafeq_accounts_create` | `POST /accounts/` |
+| `wafeq_bank_accounts_create` | `POST /bank-accounts/` |
+| `wafeq_bank_accounts_ledger_transactions_create` | `POST /bank-accounts/{bank_account_id}/ledger-transactions/` |
+| `wafeq_bank_accounts_statement_transactions_create` | `POST /bank-accounts/{bank_account_id}/statement-transactions/` |
+| `wafeq_beneficiaries_create` | `POST /beneficiaries/` |
+| `wafeq_bills_create` | `POST /bills/` |
+| `wafeq_bills_line_items_create` | `POST /bills/{bill_id}/line-items/` |
+| `wafeq_branches_create` | `POST /branches/` |
+| `wafeq_contacts_create` | `POST /contacts/` |
+| `wafeq_cost_centers_create` | `POST /cost-centers/` |
+| `wafeq_credit_notes_create` | `POST /credit-notes/` |
+| `wafeq_credit_notes_line_items_create` | `POST /credit-notes/{credit_note_id}/line-items/` |
+| `wafeq_custom_fields_create` | `POST /custom-fields/` |
+| `wafeq_debit_notes_create` | `POST /debit-notes/` |
+| `wafeq_debit_notes_line_items_create` | `POST /debit-notes/{debit_note_id}/line-items/` |
+| `wafeq_employees_create` | `POST /employees/` |
+| `wafeq_expenses_create` | `POST /expenses/` |
+| `wafeq_invoices_create` | `POST /invoices/` |
+| `wafeq_invoices_line_items_create` | `POST /invoices/{invoice_id}/line-items/` |
+| `wafeq_item_units_of_measure_create` | `POST /item-units-of-measure/` |
+| `wafeq_items_create` | `POST /items/` |
+| `wafeq_manual_journals_create` | `POST /manual-journals/` |
+| `wafeq_payment_requests_create` | `POST /payment_requests/` |
+| `wafeq_payments_create` | `POST /payments/` |
+| `wafeq_payslips_create` | `POST /payslips/` |
+| `wafeq_payslips_pay_items_create` | `POST /payslips/{payslip_id}/pay-items/` |
+| `wafeq_projects_create` | `POST /projects/` |
+| `wafeq_purchase_orders_bill_create` | `POST /purchase-orders/{id}/bill/` |
+| `wafeq_purchase_orders_create` | `POST /purchase-orders/` |
+| `wafeq_purchase_orders_line_items_create` | `POST /purchase-orders/{purchase_order_id}/line-items/` |
+| `wafeq_quotes_create` | `POST /quotes/` |
+| `wafeq_quotes_invoice_create` | `POST /quotes/{id}/invoice/` |
+| `wafeq_quotes_line_items_create` | `POST /quotes/{quote_id}/line-items/` |
+| `wafeq_simplified_invoices_create` | `POST /simplified-invoices/` |
+| `wafeq_simplified_invoices_line_items_create` | `POST /simplified-invoices/{invoice_id}/line-items/` |
+| `wafeq_units_of_measure_create` | `POST /units-of-measure/` |
+| `wafeq_upload_file` | `POST /files/` |
+| `wafeq_upload_file_raw` | `POST /files/raw/` |
+| `wafeq_warehouses_create` | `POST /warehouses/` |
+</details>
+
+<details>
+<summary><strong>🟡 WRITE · UPDATES (70)</strong></summary>
+
+| Tool | Endpoint |
+|---|---|
+| `wafeq_accounts_partial_update` | `PATCH /accounts/{id}/` |
+| `wafeq_accounts_update` | `PUT /accounts/{id}/` |
+| `wafeq_bank_accounts_ledger_transactions_partial_update` | `PATCH /bank-accounts/{bank_account_id}/ledger-transactions/{id}/` |
+| `wafeq_bank_accounts_ledger_transactions_update` | `PUT /bank-accounts/{bank_account_id}/ledger-transactions/{id}/` |
+| `wafeq_bank_accounts_partial_update` | `PATCH /bank-accounts/{id}/` |
+| `wafeq_bank_accounts_statement_transactions_partial_update` | `PATCH /bank-accounts/{bank_account_id}/statement-transactions/{id}/` |
+| `wafeq_bank_accounts_statement_transactions_update` | `PUT /bank-accounts/{bank_account_id}/statement-transactions/{id}/` |
+| `wafeq_bank_accounts_update` | `PUT /bank-accounts/{id}/` |
+| `wafeq_beneficiaries_partial_update` | `PATCH /beneficiaries/{id}/` |
+| `wafeq_beneficiaries_update` | `PUT /beneficiaries/{id}/` |
+| `wafeq_bills_line_items_partial_update` | `PATCH /bills/{bill_id}/line-items/{id}/` |
+| `wafeq_bills_line_items_update` | `PUT /bills/{bill_id}/line-items/{id}/` |
+| `wafeq_bills_partial_update` | `PATCH /bills/{id}/` |
+| `wafeq_bills_update` | `PUT /bills/{id}/` |
+| `wafeq_branches_partial_update` | `PATCH /branches/{id}/` |
+| `wafeq_branches_update` | `PUT /branches/{id}/` |
+| `wafeq_contacts_partial_update` | `PATCH /contacts/{id}/` |
+| `wafeq_contacts_update` | `PUT /contacts/{id}/` |
+| `wafeq_cost_centers_partial_update` | `PATCH /cost-centers/{id}/` |
+| `wafeq_cost_centers_update` | `PUT /cost-centers/{id}/` |
+| `wafeq_credit_notes_line_items_partial_update` | `PATCH /credit-notes/{credit_note_id}/line-items/{id}/` |
+| `wafeq_credit_notes_line_items_update` | `PUT /credit-notes/{credit_note_id}/line-items/{id}/` |
+| `wafeq_credit_notes_partial_update` | `PATCH /credit-notes/{id}/` |
+| `wafeq_credit_notes_update` | `PUT /credit-notes/{id}/` |
+| `wafeq_custom_fields_partial_update` | `PATCH /custom-fields/{id}/` |
+| `wafeq_custom_fields_update` | `PUT /custom-fields/{id}/` |
+| `wafeq_debit_notes_line_items_partial_update` | `PATCH /debit-notes/{debit_note_id}/line-items/{id}/` |
+| `wafeq_debit_notes_line_items_update` | `PUT /debit-notes/{debit_note_id}/line-items/{id}/` |
+| `wafeq_debit_notes_partial_update` | `PATCH /debit-notes/{id}/` |
+| `wafeq_debit_notes_update` | `PUT /debit-notes/{id}/` |
+| `wafeq_employees_partial_update` | `PATCH /employees/{id}/` |
+| `wafeq_employees_update` | `PUT /employees/{id}/` |
+| `wafeq_expenses_partial_update` | `PATCH /expenses/{id}/` |
+| `wafeq_expenses_update` | `PUT /expenses/{id}/` |
+| `wafeq_invoices_line_items_partial_update` | `PATCH /invoices/{invoice_id}/line-items/{id}/` |
+| `wafeq_invoices_line_items_update` | `PUT /invoices/{invoice_id}/line-items/{id}/` |
+| `wafeq_invoices_partial_update` | `PATCH /invoices/{id}/` |
+| `wafeq_invoices_update` | `PUT /invoices/{id}/` |
+| `wafeq_item_units_of_measure_partial_update` | `PATCH /item-units-of-measure/{id}/` |
+| `wafeq_item_units_of_measure_update` | `PUT /item-units-of-measure/{id}/` |
+| `wafeq_items_partial_update` | `PATCH /items/{id}/` |
+| `wafeq_items_update` | `PUT /items/{id}/` |
+| `wafeq_manual_journals_partial_update` | `PATCH /manual-journals/{id}/` |
+| `wafeq_manual_journals_update` | `PUT /manual-journals/{id}/` |
+| `wafeq_payment_requests_partial_update` | `PATCH /payment_requests/{id}/` |
+| `wafeq_payment_requests_update` | `PUT /payment_requests/{id}/` |
+| `wafeq_payments_partial_update` | `PATCH /payments/{id}/` |
+| `wafeq_payments_update` | `PUT /payments/{id}/` |
+| `wafeq_payslips_partial_update` | `PATCH /payslips/{id}/` |
+| `wafeq_payslips_pay_items_partial_update` | `PATCH /payslips/{payslip_id}/pay-items/{id}/` |
+| `wafeq_payslips_pay_items_update` | `PUT /payslips/{payslip_id}/pay-items/{id}/` |
+| `wafeq_payslips_update` | `PUT /payslips/{id}/` |
+| `wafeq_projects_partial_update` | `PATCH /projects/{id}/` |
+| `wafeq_projects_update` | `PUT /projects/{id}/` |
+| `wafeq_purchase_orders_line_items_partial_update` | `PATCH /purchase-orders/{purchase_order_id}/line-items/{id}/` |
+| `wafeq_purchase_orders_line_items_update` | `PUT /purchase-orders/{purchase_order_id}/line-items/{id}/` |
+| `wafeq_purchase_orders_partial_update` | `PATCH /purchase-orders/{id}/` |
+| `wafeq_purchase_orders_update` | `PUT /purchase-orders/{id}/` |
+| `wafeq_quotes_line_items_partial_update` | `PATCH /quotes/{quote_id}/line-items/{id}/` |
+| `wafeq_quotes_line_items_update` | `PUT /quotes/{quote_id}/line-items/{id}/` |
+| `wafeq_quotes_partial_update` | `PATCH /quotes/{id}/` |
+| `wafeq_quotes_update` | `PUT /quotes/{id}/` |
+| `wafeq_simplified_invoices_line_items_partial_update` | `PATCH /simplified-invoices/{invoice_id}/line-items/{id}/` |
+| `wafeq_simplified_invoices_line_items_update` | `PUT /simplified-invoices/{invoice_id}/line-items/{id}/` |
+| `wafeq_simplified_invoices_partial_update` | `PATCH /simplified-invoices/{id}/` |
+| `wafeq_simplified_invoices_update` | `PUT /simplified-invoices/{id}/` |
+| `wafeq_units_of_measure_partial_update` | `PATCH /units-of-measure/{id}/` |
+| `wafeq_units_of_measure_update` | `PUT /units-of-measure/{id}/` |
+| `wafeq_warehouses_partial_update` | `PATCH /warehouses/{id}/` |
+| `wafeq_warehouses_update` | `PUT /warehouses/{id}/` |
+</details>
+
+<details>
+<summary><strong>🟠 STATE CHANGE (2)</strong></summary>
+
+| Tool | Endpoint |
+|---|---|
+| `wafeq_expenses_mark_as_draft_create` | `POST /expenses/{id}/mark-as-draft/` |
+| `wafeq_expenses_mark_as_posted_create` | `POST /expenses/{id}/mark-as-posted/` |
+</details>
+
+<details>
+<summary><strong>🔴 IRREVERSIBLE · EXTERNAL FILING (3)</strong></summary>
+
+| Tool | Endpoint |
+|---|---|
+| `wafeq_credit_notes_tax_authority_report_create` | `POST /credit-notes/{id}/tax-authority/report/` |
+| `wafeq_invoices_tax_authority_report_create` | `POST /invoices/{id}/tax-authority/report/` |
+| `wafeq_simplified_invoices_tax_authority_report_create` | `POST /simplified-invoices/{id}/tax-authority/report/` |
+</details>
+
+<details>
+<summary><strong>🔴 IRREVERSIBLE · LEDGER (2)</strong></summary>
+
+| Tool | Endpoint |
+|---|---|
+| `wafeq_amortizations_end_early_create` | `POST /amortizations/{id}/end-early/` |
+| `wafeq_revenue_recognitions_end_early_create` | `POST /revenue-recognitions/{id}/end-early/` |
+</details>
+
+<details>
+<summary><strong>🔴 DESTRUCTIVE · DELETES (39)</strong></summary>
+
+| Tool | Endpoint |
+|---|---|
+| `wafeq_accounts_destroy` | `DELETE /accounts/{id}/` |
+| `wafeq_amortizations_destroy` | `DELETE /amortizations/{id}/` |
+| `wafeq_bank_accounts_destroy` | `DELETE /bank-accounts/{id}/` |
+| `wafeq_bank_accounts_ledger_transactions_destroy` | `DELETE /bank-accounts/{bank_account_id}/ledger-transactions/{id}/` |
+| `wafeq_bank_accounts_statement_transactions_destroy` | `DELETE /bank-accounts/{bank_account_id}/statement-transactions/{id}/` |
+| `wafeq_beneficiaries_destroy` | `DELETE /beneficiaries/{id}/` |
+| `wafeq_bills_destroy` | `DELETE /bills/{id}/` |
+| `wafeq_bills_line_items_destroy` | `DELETE /bills/{bill_id}/line-items/{id}/` |
+| `wafeq_branches_destroy` | `DELETE /branches/{id}/` |
+| `wafeq_contacts_destroy` | `DELETE /contacts/{id}/` |
+| `wafeq_cost_centers_destroy` | `DELETE /cost-centers/{id}/` |
+| `wafeq_credit_notes_destroy` | `DELETE /credit-notes/{id}/` |
+| `wafeq_credit_notes_line_items_destroy` | `DELETE /credit-notes/{credit_note_id}/line-items/{id}/` |
+| `wafeq_custom_fields_destroy` | `DELETE /custom-fields/{id}/` |
+| `wafeq_debit_notes_destroy` | `DELETE /debit-notes/{id}/` |
+| `wafeq_debit_notes_line_items_destroy` | `DELETE /debit-notes/{debit_note_id}/line-items/{id}/` |
+| `wafeq_employees_destroy` | `DELETE /employees/{id}/` |
+| `wafeq_expenses_destroy` | `DELETE /expenses/{id}/` |
+| `wafeq_files_destroy` | `DELETE /files/{id}/` |
+| `wafeq_invoices_destroy` | `DELETE /invoices/{id}/` |
+| `wafeq_invoices_line_items_destroy` | `DELETE /invoices/{invoice_id}/line-items/{id}/` |
+| `wafeq_item_units_of_measure_destroy` | `DELETE /item-units-of-measure/{id}/` |
+| `wafeq_items_destroy` | `DELETE /items/{id}/` |
+| `wafeq_manual_journals_destroy` | `DELETE /manual-journals/{id}/` |
+| `wafeq_payment_requests_destroy` | `DELETE /payment_requests/{id}/` |
+| `wafeq_payments_destroy` | `DELETE /payments/{id}/` |
+| `wafeq_payslips_destroy` | `DELETE /payslips/{id}/` |
+| `wafeq_payslips_pay_items_destroy` | `DELETE /payslips/{payslip_id}/pay-items/{id}/` |
+| `wafeq_projects_destroy` | `DELETE /projects/{id}/` |
+| `wafeq_purchase_orders_destroy` | `DELETE /purchase-orders/{id}/` |
+| `wafeq_purchase_orders_line_items_destroy` | `DELETE /purchase-orders/{purchase_order_id}/line-items/{id}/` |
+| `wafeq_quotes_destroy` | `DELETE /quotes/{id}/` |
+| `wafeq_quotes_line_items_destroy` | `DELETE /quotes/{quote_id}/line-items/{id}/` |
+| `wafeq_request` | _hand-written_ |
+| `wafeq_revenue_recognitions_destroy` | `DELETE /revenue-recognitions/{id}/` |
+| `wafeq_simplified_invoices_destroy` | `DELETE /simplified-invoices/{id}/` |
+| `wafeq_simplified_invoices_line_items_destroy` | `DELETE /simplified-invoices/{invoice_id}/line-items/{id}/` |
+| `wafeq_units_of_measure_destroy` | `DELETE /units-of-measure/{id}/` |
+| `wafeq_warehouses_destroy` | `DELETE /warehouses/{id}/` |
+</details>
+
 ## Coverage
 
 | Area | Tools | 🟢 Read | 🟡 Write | 🔴 Irreversible | 🔴 Delete |
@@ -418,6 +733,34 @@ re-check after an update.
 
 Observed-behaviour corrections live in `src/overrides.ts`, keyed by `operationId` and
 dated, so an entry whose operation disappears simply stops applying.
+
+## Notes & conventions
+
+- **Dates** are `YYYY-MM-DD`. **Amounts** use a dot as the decimal separator.
+- **Paging**: list tools take `limit` and `offset`, and report the total count.
+- **Reports** take report-specific date parameters — balance sheet `date` +
+  `period_count`; profit-and-loss and cash flow `date_after` + `date_before`; trial
+  balance `from_date` + `to_date`. Wafeq **silently ignores** a misspelled query
+  parameter, so a wrong name looks like a working call; the per-report schemas exist
+  to make that impossible.
+- **Whole periods**: profit-and-loss and cash-flow ranges must cover whole months or
+  years. The server checks locally and replies with the nearest valid range rather
+  than spending a round trip on an HTTP 400.
+- **File uploads** (`wafeq_files_*`): pass base64 content plus a filename.
+  `POST /files/` is multipart-only and `POST /files/raw/` needs a
+  `Content-Disposition` header — both are handled for you.
+- **PDF downloads** come back base64-encoded in a small envelope carrying the size
+  and content type, not as mangled text.
+- **Idempotency**: every write endpoint that supports `X-Wafeq-Idempotency-Key` gets
+  a UUID v4 automatically, reused across retries. Pass your own to make a deliberate
+  re-run safe.
+- **Retries**: transient `429` / `5xx` responses are retried with jittered
+  exponential backoff, honoring `Retry-After`, under the same idempotency key.
+- **Rate limiting**: Wafeq publishes no numeric limit, so the client-side default
+  (`WAFEQ_MAX_REQUESTS=20` per `WAFEQ_RATE_WINDOW_MS=10000`) is deliberately
+  conservative. Raise it if you know your allowance.
+- **One organization per credential.** A Wafeq API key is organization-scoped; every
+  tool call acts on that organization, and `/health` names it.
 
 ## CI & releases
 
