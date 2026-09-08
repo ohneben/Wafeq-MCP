@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { createServer as createHttpServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { randomUUID, timingSafeEqual } from "node:crypto";
+import { createRequire } from "node:module";
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
@@ -18,7 +19,51 @@ import {
 } from "./tools.js";
 
 const SERVER_NAME = "wafeq-mcp";
-const SERVER_VERSION = "2.0.0";
+const FALLBACK_VERSION = "unknown";
+
+/**
+ * The version this server reports over MCP and on /health. It is read from
+ * package.json, which always carries the last released version: the release
+ * workflow stamps it from the git tag and writes it back to main, so the number
+ * is never maintained by hand and never a placeholder. FALLBACK_VERSION shows up
+ * only if package.json cannot be read at all.
+ */
+function readPackageVersion(): string {
+  try {
+    const pkg = createRequire(import.meta.url)("../package.json") as { version?: string };
+    return pkg.version ?? FALLBACK_VERSION;
+  } catch {
+    return FALLBACK_VERSION;
+  }
+}
+
+const SERVER_VERSION = readPackageVersion();
+
+/**
+ * Sent to the client on initialize. It tells a host how to read the safety
+ * banners and states the handful of Wafeq conventions that a model otherwise has
+ * to discover by getting a call wrong first.
+ */
+const SERVER_INSTRUCTIONS = [
+  "MCP server for the Wafeq accounting API (https://api.wafeq.com/v1).",
+  "",
+  "Every tool description opens with a category banner:",
+  "  \u{1F7E2} READ-ONLY \u2014 fetches data only; safe to call.",
+  "  \u{1F7E1} WRITE \u2014 creates or updates accounting data.",
+  "  \u{1F7E0} STATE CHANGE \u2014 moves a document in or out of the ledger; reversible.",
+  "  \u{1F534} IRREVERSIBLE \u2014 files with a tax authority or posts a remaining balance;",
+  "     there is no API undo. Confirm with the user first.",
+  "  \u{1F534} DESTRUCTIVE \u2014 deletes data. Confirm with the user first.",
+  "",
+  "Conventions: dates are 'YYYY-MM-DD'. Amounts use a dot as the decimal separator.",
+  "List endpoints page with `limit` and `offset`. Reports take report-specific date",
+  "parameters \u2014 profit-and-loss and cash-flow ranges must cover whole months or",
+  "years. PDF downloads come back base64-encoded in a small envelope.",
+  "",
+  "All tool calls act on the single Wafeq organization the configured credential",
+  "belongs to; its name is reported on /health. `wafeq_request` is an escape hatch",
+  "for endpoints missing from the bundled spec, not the primary interface.",
+].join("\n");
 
 /**
  * Which Wafeq organization this key is bound to.
@@ -80,7 +125,10 @@ function describeOrganization(org: OrganizationIdentity): string {
 
 function buildServer(tools: ToolDefinition[], config: ServerConfig): Server {
   const toolMap = new Map(tools.map((t) => [t.name, t]));
-  const server = new Server({ name: SERVER_NAME, version: SERVER_VERSION }, { capabilities: { tools: {} } });
+  const server = new Server(
+    { name: SERVER_NAME, version: SERVER_VERSION },
+    { capabilities: { tools: {} }, instructions: SERVER_INSTRUCTIONS },
+  );
 
   server.setRequestHandler(ListToolsRequestSchema, async () => ({
     tools: tools.map((t) => ({

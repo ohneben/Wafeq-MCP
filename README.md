@@ -2,9 +2,19 @@
 
 [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-ohneben-FFDD00?style=for-the-badge&logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/ohneben)
 
+---
+
+#### License & checks
+
 [![CI](https://github.com/ohneben/Wafeq-MCP/actions/workflows/ci.yml/badge.svg)](https://github.com/ohneben/Wafeq-MCP/actions/workflows/ci.yml)
-[![Publish Docker image](https://github.com/ohneben/Wafeq-MCP/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/ohneben/Wafeq-MCP/actions/workflows/docker-publish.yml)
+[![Publish image & MCP Registry entry](https://github.com/ohneben/Wafeq-MCP/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/ohneben/Wafeq-MCP/actions/workflows/docker-publish.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE.md)
+
+#### MCP registries
+
+[![MCP Registry](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fregistry.modelcontextprotocol.io%2Fv0.1%2Fservers%2Fio.github.ohneben%252Fwafeq-mcp%2Fversions%2Flatest&query=%24.server.version&prefix=v&label=MCP%20Registry&color=blue&logo=modelcontextprotocol&logoColor=white)](https://registry.modelcontextprotocol.io/v0.1/servers/io.github.ohneben%2Fwafeq-mcp/versions/latest)
+[![Listed on mcpservers.org](https://mcpservers.org/badge.svg)](https://mcpservers.org/servers/ohneben/wafeq-mcp)
+[![Wafeq-MCP MCP server](https://glama.ai/mcp/servers/ohneben/Wafeq-MCP/badges/score.svg)](https://glama.ai/mcp/servers/ohneben/Wafeq-MCP)
 
 Run your [Wafeq](https://www.wafeq.com/) books in plain language from AI assistants
 like **Claude**, **Cursor**, and any other [MCP](https://modelcontextprotocol.io)
@@ -30,6 +40,7 @@ LLM** and **easy to run against real accounting data**:
 | --- | --- |
 | **All 251 endpoints, spec-driven** | Full coverage of invoices, bills, quotes, credit and debit notes, payments, banking, journals, payroll, projects, inventory and reports — nothing hand-picked or left behind. |
 | **Nine safety categories, not four** 🟢 / 🟡 / 🟠 / 🔴 | A dozen of Wafeq's POSTs are not creates. Previews write nothing; ending an amortization early posts to the ledger with no undo; reporting an invoice to a tax authority leaves your organization permanently. Each gets its own banner instead of being lumped in with "create". |
+| **Server instructions sent on connect** | The client is told how to read the safety banners and the handful of Wafeq conventions — date format, decimal separator, whole-period report ranges — up front, instead of discovering them by getting a call wrong first. |
 | **Machine-readable MCP annotations** (`readOnlyHint`, `destructiveHint`) | Hosts that honor annotations (Claude included) can auto-trust the 98 read-only tools and demand confirmation before any of the 44 that delete or cannot be undone. |
 | **Correct report parameters, per report** | Each of the four reports gets its own schema: balance sheet takes `date` + `period_count`; profit-and-loss and cash flow take `date_after` + `date_before`; trial balance takes `from_date` + `to_date`. Wafeq **silently ignores** misspelled query parameters, so a wrong name looks like a working call. |
 | **Whole-period validation before sending** | Profit-and-loss and cash flow reject ranges that don't align to whole months or years. The server checks locally and replies with the nearest valid range instead of spending a round trip on an HTTP 400. |
@@ -156,8 +167,54 @@ curl -s http://localhost:8765/health
 the company you expected, stop and fix the key before doing anything else. `/health`
 answers `503` and `"status": "degraded"` when the credentials can't be verified.
 
-**4. Point your MCP client at it:** `http://localhost:8765/mcp` (Streamable HTTP). If
-you set `MCP_SHARED_TOKEN`, send it as `Authorization: Bearer <token>`.
+**4. Point your MCP client at it:** `http://localhost:8765/mcp` (Streamable HTTP).
+
+Remote endpoints are added to Claude as a **custom connector** (Settings →
+Connectors), or bridged locally with
+[`mcp-remote`](https://www.npmjs.com/package/mcp-remote). For the bridge, add this
+under `mcpServers` in your client config and restart the app completely:
+
+```json
+{
+  "mcpServers": {
+    "wafeq": {
+      "command": "npx",
+      "args": [
+        "mcp-remote",
+        "http://localhost:8765/mcp",
+        "--header", "Authorization: Bearer YOUR_MCP_SHARED_TOKEN"
+      ]
+    }
+  }
+}
+```
+
+(Drop the `--header` line if you left `MCP_SHARED_TOKEN` empty.)
+
+### Prefer a ready-made image?
+
+Every release publishes a ready-to-run image to the GitHub Container Registry, so
+you can skip the local build entirely:
+
+```bash
+docker run -d --name wafeq-mcp -p 127.0.0.1:8765:8765 --env-file .env \
+  ghcr.io/ohneben/wafeq-mcp:latest
+```
+
+Pin a version (`:2.0.0`) rather than `latest` if you want releases to be something
+you opt into.
+
+### Install from the MCP Registry
+
+The server is published to the [MCP Registry](https://registry.modelcontextprotocol.io)
+as `io.github.ohneben/wafeq-mcp`, so registry-aware clients can install it by name.
+The registry entry launches the image over **stdio** — see
+[Run the container over stdio](#run-the-container-over-stdio) for the equivalent
+hand-written config.
+
+```bash
+curl -s "https://registry.modelcontextprotocol.io/v0.1/servers/io.github.ohneben%2Fwafeq-mcp/versions/latest"
+```
 
 ## Get your API credentials
 
@@ -315,6 +372,32 @@ For **Claude Code**:
 claude mcp add wafeq --env WAFEQ_API_KEY=your-key-here -- node /absolute/path/to/dist/index.js
 ```
 
+### Run the container over stdio
+
+You can also let your client launch the published image directly, with no HTTP
+server and no local build:
+
+```json
+{
+  "mcpServers": {
+    "wafeq": {
+      "command": "docker",
+      "args": [
+        "run", "-i", "--rm",
+        "-e", "MCP_TRANSPORT=stdio",
+        "-e", "WAFEQ_API_KEY",
+        "ghcr.io/ohneben/wafeq-mcp:latest"
+      ],
+      "env": {
+        "WAFEQ_API_KEY": "your-key-here"
+      }
+    }
+  }
+}
+```
+
+`MCP_TRANSPORT=stdio` is required here: the image defaults to the HTTP transport.
+
 Useful scripts:
 
 | Command | What it does |
@@ -335,6 +418,36 @@ re-check after an update.
 
 Observed-behaviour corrections live in `src/overrides.ts`, keyed by `operationId` and
 dated, so an entry whose operation disappears simply stops applying.
+
+## CI & releases
+
+Every push and pull request is built and tested on Node 20 and 22, and the tool
+catalogue is generated with no credentials present — which is what catches a
+duplicate or schema-illegal tool name before it ships. CI also fails if `.env` ever
+becomes tracked.
+
+**A release is a `vX.Y.Z` tag and nothing else.** No version number is maintained by
+hand. Pushing the tag runs the whole chain:
+
+1. The version is derived once, from the tag.
+2. The image is built and pushed to `ghcr.io/ohneben/wafeq-mcp` — tagged with the
+   version, `MAJOR.MINOR`, the short SHA, and `latest` on `main`.
+3. The entry is published to the [MCP Registry](https://registry.modelcontextprotocol.io)
+   with `server.json` pinned to that exact image tag. Ownership is proved by the
+   `io.modelcontextprotocol.server.name` label on the image, which must match
+   `server.json`'s `name` — a test enforces that it does.
+4. The released number is written back into `package.json` and `server.json` on
+   `main`, and the tag is moved onto that commit. So the repository always states
+   the last published version, and the server reports it over MCP and on `/health`
+   without a code edit.
+
+```bash
+npm version 2.0.1 --no-git-tag-version   # optional; CI stamps it either way
+git tag v2.0.1 && git push origin v2.0.1
+```
+
+`workflow_dispatch` re-publishes a given version without cutting a new tag. Pushes to
+`main` build a `-dev.g<sha>` image and stop there — they never touch the registry.
 
 ## Security
 
