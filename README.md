@@ -4,12 +4,12 @@
 
 ---
 
-#### License & Checks
+#### License & checks
 
 [![CI](https://github.com/ohneben/Wafeq-MCP/actions/workflows/ci.yml/badge.svg)](https://github.com/ohneben/Wafeq-MCP/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE.md)
 
-#### MCP Registries
+#### MCP registries
 
 [![MCP Registry](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fregistry.modelcontextprotocol.io%2Fv0.1%2Fservers%2Fio.github.ohneben%252Fwafeq-mcp%2Fversions%2Flatest&query=%24.server.version&prefix=v&label=MCP%20Registry&color=blue&logo=modelcontextprotocol&logoColor=white)](https://registry.modelcontextprotocol.io/v0.1/servers/io.github.ohneben%2Fwafeq-mcp/versions/latest)
 [![Listed on mcpservers.org](https://mcpservers.org/badge.svg)](https://mcpservers.org/servers/ohneben/wafeq-mcp)
@@ -127,8 +127,9 @@ model never sees or handles it.
 cp .env.example .env
 ```
 
-Then edit `.env` and set `WAFEQ_API_KEY`. If the server will be reachable beyond
-localhost, set `MCP_SHARED_TOKEN` to a long random string as well.
+Then edit `.env` and set `WAFEQ_API_KEY`. Unless `HOST` is a loopback address the
+server also requires `MCP_AUTH_TOKEN` and refuses to start without one, so set it
+to a long random string: `MCP_AUTH_TOKEN=$(openssl rand -hex 32)`.
 
 **2. Start the server:**
 
@@ -181,14 +182,15 @@ under `mcpServers` in your client config and restart the app completely:
       "args": [
         "mcp-remote",
         "http://localhost:8765/mcp",
-        "--header", "Authorization: Bearer YOUR_MCP_SHARED_TOKEN"
+        "--header", "Authorization: Bearer YOUR_MCP_AUTH_TOKEN"
       ]
     }
   }
 }
 ```
 
-(Drop the `--header` line if you left `MCP_SHARED_TOKEN` empty.)
+(Drop the `--header` line only if the server runs without a token, which it
+allows on a loopback bind alone.)
 
 ### Prefer a ready-made image?
 
@@ -242,7 +244,12 @@ working default.
 | `PORT` | `8765` | HTTP listen port. |
 | `HOST` | `0.0.0.0` | HTTP bind address. |
 | `MCP_HTTP_PATH` | `/mcp` | Path the MCP endpoint is served on. |
-| `MCP_SHARED_TOKEN` | — | Bearer token required on `/mcp`. Empty = no auth. **Set it if the port is reachable beyond localhost.** |
+| `MCP_AUTH_TOKEN` | — | Bearer token required on `/mcp`. **Required** unless `HOST` is a loopback address, otherwise the server refuses to start. Renamed from `MCP_SHARED_TOKEN` in 0.4.0. |
+| `MCP_ALLOWED_HOSTS` | — | Comma-separated hostnames the `Host` header may carry. Empty lets the server derive it: the loopback names on a loopback bind, no check behind a reverse proxy. |
+| `MCP_ALLOW_INSECURE` | `0` | Start without a token on a non-loopback bind. Only for a port that genuinely is not reachable by anyone else. |
+| `MCP_BODY_LIMIT` | `25mb` | Largest accepted request body. |
+| `MCP_SESSION_TTL` | `1800` | Seconds an idle session is kept before it is swept. |
+| `MCP_MAX_SESSIONS` | `256` | Concurrent sessions before the least recently used one is evicted. |
 | `WAFEQ_TOOL_GROUPS` | — | Comma-separated resource groups to expose, e.g. `invoices,bills,reports`. Empty = all 251. Run `npm run list-tools` for the list. |
 | `WAFEQ_MAX_REQUESTS` | `20` | Client-side rate limit: requests per window. `0` disables throttling. |
 | `WAFEQ_RATE_WINDOW_MS` | `10000` | Rate-limit window in milliseconds. |
@@ -801,8 +808,10 @@ git tag v2.0.1 && git push origin v2.0.1
 - **Never commit `.env`.** It is git-ignored, and CI fails if it ever becomes tracked.
   `.env.example` holds placeholders only.
 - **Bind to localhost, or set a token.** `docker-compose.yml` publishes on
-  `127.0.0.1` only. If you expose the port any further, set `MCP_SHARED_TOKEN` first;
-  it is compared in constant time.
+  `127.0.0.1` only. Bound any further, the server refuses to start without
+  `MCP_AUTH_TOKEN`; it is compared in constant time. A `Host` header check runs
+  on top of that, so a web page cannot reach a loopback server by DNS
+  rebinding.
 - **Local file uploads are off by default.** `WAFEQ_ALLOW_LOCAL_FILE_UPLOAD=false`
   means the server will not read files from its own filesystem. Turning it on lets
   anything that can call the server ask it to read a local path — leave it off unless
