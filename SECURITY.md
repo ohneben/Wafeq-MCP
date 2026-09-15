@@ -42,11 +42,16 @@ of books. Treat it accordingly:
 ## Exposure
 
 - `docker-compose.yml` publishes on `127.0.0.1` only.
-- If you expose the port further, set `MCP_SHARED_TOKEN` first. It is required on the
-  `/mcp` endpoint and compared in constant time.
-- `/health` reports the connected organization's name and id. That is deliberate — it
-  is how you catch a key pointed at the wrong tenant — but it means `/health` should
-  not be public either.
+- Bound to anything but a loopback address, the server refuses to start without
+  `MCP_AUTH_TOKEN`. It is required on the `/mcp` endpoint and compared in constant
+  time. The variable was named `MCP_SHARED_TOKEN` before 0.4.0.
+- A `Host` header check runs on every route, so a web page cannot reach a
+  loopback server by DNS rebinding. `MCP_ALLOWED_HOSTS` widens it deliberately.
+- `/health` reports liveness only. It used to hand out the connected
+  organization's name and id, the version, the tool count and whether a token was
+  required, all without authentication, which told an attacker whose books these
+  are and whether they are protected. The organization is still named in the
+  startup log, which is where you catch a key pointed at the wrong tenant.
 - `WAFEQ_ALLOW_LOCAL_FILE_UPLOAD` is off by default. Turning it on lets any client
   that can reach the server ask it to read a file from the server's own filesystem.
 

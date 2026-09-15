@@ -53,8 +53,8 @@
           "default": "https://api.wafeq.com/v1"
         },
         {
-          "name": "MCP_SHARED_TOKEN",
-          "description": "Bearer token required on the /mcp endpoint when running the HTTP transport. Empty leaves the endpoint open, so bind it to localhost only.",
+          "name": "MCP_AUTH_TOKEN",
+          "description": "Only for MCP_TRANSPORT=http: bearer token required on /mcp. Without it a non-loopback bind refuses to start.",
           "isRequired": false,
           "isSecret": true
         }
