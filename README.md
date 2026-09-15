@@ -828,7 +828,5 @@ See [SECURITY.md](./SECURITY.md) to report a vulnerability.
 ## Credits & license
 
 MIT — see [LICENSE.md](./LICENSE.md). Built on the
-[Model Context Protocol TypeScript SDK](https://github.com/modelcontextprotocol/typescript-sdk),
-following the same architecture as
-[ohneben's LearnWorlds MCP](https://github.com/ohneben/Learnworlds-MCP).
+[Model Context Protocol TypeScript SDK](https://github.com/modelcontextprotocol/typescript-sdk).
 Not affiliated with or endorsed by Wafeq.
