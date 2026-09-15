@@ -244,7 +244,7 @@ working default.
 | `PORT` | `8765` | HTTP listen port. |
 | `HOST` | `0.0.0.0` | HTTP bind address. |
 | `MCP_HTTP_PATH` | `/mcp` | Path the MCP endpoint is served on. |
-| `MCP_AUTH_TOKEN` | — | Bearer token required on `/mcp`. **Required** unless `HOST` is a loopback address, otherwise the server refuses to start. Renamed from `MCP_SHARED_TOKEN` in 0.4.0. |
+| `MCP_AUTH_TOKEN` | — | Bearer token required on `/mcp`. **Required** unless `HOST` is a loopback address, otherwise the server refuses to start. Renamed from `MCP_SHARED_TOKEN` in 2.1.0. |
 | `MCP_ALLOWED_HOSTS` | — | Comma-separated hostnames the `Host` header may carry. Empty lets the server derive it: the loopback names on a loopback bind, no check behind a reverse proxy. |
 | `MCP_ALLOW_INSECURE` | `0` | Start without a token on a non-loopback bind. Only for a port that genuinely is not reachable by anyone else. |
 | `MCP_BODY_LIMIT` | `25mb` | Largest accepted request body. |

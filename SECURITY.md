@@ -44,7 +44,7 @@ of books. Treat it accordingly:
 - `docker-compose.yml` publishes on `127.0.0.1` only.
 - Bound to anything but a loopback address, the server refuses to start without
   `MCP_AUTH_TOKEN`. It is required on the `/mcp` endpoint and compared in constant
-  time. The variable was named `MCP_SHARED_TOKEN` before 0.4.0.
+  time. The variable was named `MCP_SHARED_TOKEN` before 2.1.0.
 - A `Host` header check runs on every route, so a web page cannot reach a
   loopback server by DNS rebinding. `MCP_ALLOWED_HOSTS` widens it deliberately.
 - `/health` reports liveness only. It used to hand out the connected
